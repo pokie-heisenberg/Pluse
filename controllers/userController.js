@@ -2,6 +2,7 @@ const catchAsyncError = require('./../utils/catchAsyncError');
 const appError = require('./../utils/appError');
 const User = require('./../models/userModels');
 const Follow = require('./../models/followModels');
+const FollowRequest = require('./../models/followRequestModel');
 const multer = require('multer');
 const factoryFunction = require('./factoryFunction');
 const multerStorage = multer.memoryStorage();
@@ -96,10 +97,20 @@ exports.getUser = catchAsyncError(async (req, res, next) => {
   const followersCount = await Follow.countDocuments({ following: user._id });
   const followingCount = await Follow.countDocuments({ follower: user._id });
 
-  // Convert to object so we can append properties if needed, though they exist in schema
   const userObj = user.toObject();
   userObj.follower = followersCount;
   userObj.following = followingCount;
+
+  if (req.user) {
+    const isFollowed = await Follow.exists({ follower: req.user.id, following: user._id });
+    const isRequested = await FollowRequest.exists({ sender: req.user.id, receiver: user._id, status: 'pending' });
+    
+    userObj.isFollowed = !!isFollowed;
+    userObj.isRequested = !!isRequested;
+  } else {
+    userObj.isFollowed = false;
+    userObj.isRequested = false;
+  }
 
   res.status(200).json({
     status: 'success',
