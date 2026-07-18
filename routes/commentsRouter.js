@@ -6,13 +6,13 @@ const likeRouter = require('./likeRouter');
 const postController = require('./../controllers/postController');
 router
   .route('/')
-  .get(commentController.getComment);
+  .get(authController.optionalProtect, commentController.getComment);
 router
   .route('/:id')
   .get(commentController.getOneComment);
 router
   .route('/:commentId/reply')
-  .get(commentController.getReplies);
+  .get(authController.optionalProtect, commentController.getReplies);
 
 router.use(authController.protect);
 

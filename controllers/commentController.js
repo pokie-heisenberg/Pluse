@@ -3,18 +3,32 @@ const appError = require('./../utils/appError');
 const Comment = require('./../models/commentsModels');
 const Post = require('./../models/postModels');
 const Notification = require('./../models/notificationModels');
+const Like = require('./../models/likeModels');
 const factoryFunction = require('./factoryFunction');
 exports.getComment = catchAsyncError(async (req, res, next) => {
   let filter = {};
   if (req.params.postId) filter = { post: req.params.postId, parentComment: null }; // Top level comments
   
-  const comments = await Comment.find(filter).populate('author', 'name profileImage');
+  const doc = await Comment.find(filter).populate('author', 'name profileImage');
   
+  let comments = doc.map((comment) => (comment.toObject ? comment.toObject() : comment));
+  if (req.user) {
+    const userLikes = await Like.find({
+      user: req.user.id,
+      comment: { $in: comments.map((c) => c._id) },
+    });
+    const likedCommentIds = userLikes.map((l) => l.comment.toString());
+    comments = comments.map((comment) => ({
+      ...comment,
+      isLiked: likedCommentIds.includes(comment._id.toString()),
+    }));
+  }
+
   res.status(200).json({
     status: 'success',
     results: comments.length,
     data: {
-      comments, // return as comments for easier frontend parsing
+      comments,
       data: comments
     }
   });
@@ -53,12 +67,27 @@ exports.createComment = catchAsyncError(async (req, res, next) => {
   if (!doc) {
     return next(new appError('Comment could not be created', 400));
   }
+  
+  if (req.body.parentComment) {
+    const parent = await Comment.findById(req.body.parentComment);
+    if (parent && parent.author.toString() !== req.user.id) {
+      await Notification.create({
+        recipient: parent.author,
+        sender: req.user.id,
+        type: 'comment',
+        post: doc.post,
+        comment: doc._id,
+        message: 'replied to your comment',
+      });
+    }
+  }
+
   const post = await Post.findById(req.body.post);
   if (post) {
     post.comments = (post.comments || 0) + 1;
     await post.save({ validateBeforeSave: false });
     
-    if (post.author.toString() !== req.user.id) {
+    if (post.author.toString() !== req.user.id && (!req.body.parentComment || post.author.toString() !== (await Comment.findById(req.body.parentComment))?.author?.toString())) {
       await Notification.create({
       recipient: post.author,
       sender: req.user.id,
@@ -79,7 +108,21 @@ exports.createComment = catchAsyncError(async (req, res, next) => {
   });
 });
 exports.getReplies = catchAsyncError(async (req, res, next) => {
-  const replies = await Comment.find({ parentComment: req.params.commentId }).populate('author', 'name profileImage');
+  const doc = await Comment.find({ parentComment: req.params.commentId }).populate('author', 'name profileImage');
+  
+  let replies = doc.map((reply) => (reply.toObject ? reply.toObject() : reply));
+  if (req.user) {
+    const userLikes = await Like.find({
+      user: req.user.id,
+      comment: { $in: replies.map((r) => r._id) },
+    });
+    const likedReplyIds = userLikes.map((l) => l.comment.toString());
+    replies = replies.map((reply) => ({
+      ...reply,
+      isLiked: likedReplyIds.includes(reply._id.toString()),
+    }));
+  }
+
   res.status(201).json({
     status: 'success',
     result: replies.length,
