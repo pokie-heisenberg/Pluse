@@ -49,15 +49,10 @@ exports.acceptFollowRequest = catchAsyncError(async (req, res, next) => {
   if (!request) {
     return next(new appError('No request found!', 401));
   }
-  // Create mutual follow relationships
+  // Create follow: the sender now follows the receiver (accepter)
   await Follow.create({
     follower: req.params.userId,
     following: req.user.id,
-  });
-
-  await Follow.create({
-    follower: req.user.id,
-    following: req.params.userId,
   });
 
   // Increment follower and following counts for both users
