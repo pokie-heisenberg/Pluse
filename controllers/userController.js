@@ -102,8 +102,8 @@ exports.getUser = catchAsyncError(async (req, res, next) => {
   userObj.following = followingCount;
 
   if (req.user) {
-    const isFollowed = await Follow.exists({ follower: req.user._id, following: user._id });
-    const isRequested = await FollowRequest.exists({ sender: req.user._id, receiver: user._id, status: 'pending' });
+    const isFollowed = await Follow.findOne({ follower: req.user._id, following: user._id });
+    const isRequested = await FollowRequest.findOne({ sender: req.user._id, receiver: user._id, status: 'pending' });
     
     userObj.isFollowed = !!isFollowed;
     userObj.isRequested = !!isRequested;

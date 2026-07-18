@@ -103,6 +103,12 @@ exports.unfollow = catchAsyncError(async (req, res, next) => {
     following: req.params.userId,
   });
 
+  const deletedRequest = await FollowRequest.findOneAndDelete({
+    sender: req.user.id,
+    receiver: req.params.userId,
+    status: 'pending'
+  });
+
   res.status(200).json({
     status: 'success',
     message: 'unfollowed successfully',
