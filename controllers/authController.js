@@ -21,7 +21,10 @@ const createSendToken = (user, statusCode, req, res) => {
     ),
     httpOnly: true,
   };
-  if (process.env.NODE_ENV === 'production' && (req.secure || req.headers['x-forwarded-proto'] === 'https')) cookieOptions.secure = true;
+  if (process.env.NODE_ENV === 'production' && (req.secure || req.headers['x-forwarded-proto'] === 'https')) {
+    cookieOptions.secure = true;
+    cookieOptions.sameSite = 'none';
+  }
   res.cookie('jwt', token, cookieOptions);
   user.password = undefined;
   res.status(statusCode).json({
@@ -61,6 +64,8 @@ exports.logout = (req, res) => {
   res.cookie('jwt', 'loggedOut', {
     expires: new Date(Date.now() + 1 * 1000),
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'Lax',
   });
   res.status(200).json({
     status: 'success',
