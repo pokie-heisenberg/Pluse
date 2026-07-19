@@ -46,28 +46,20 @@ exports.signUp = catchAsyncError(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
     passwordChangedAt: req.body.passwordChangedAt,
   });
-
-  // Generate verification token
   const verifyToken = newUser.createEmailVerificationToken();
   await newUser.save({ validateBeforeSave: false });
-
-  // Send verification email
   const verifyURL = `${process.env.FRONTEND_URL}/verify-email/${verifyToken}`;
   await new Email(newUser, verifyURL).sendVerifyEmail();
-
   res.status(201).json({
     status: 'success',
     message: 'Account created! Please check your email to verify your account.',
   });
 });
 exports.verifyemail = catchAsyncError(async (req, res, next) => {
-  // Hash the token from URL
   const hashedToken = crypto
     .createHash('sha256')
     .update(req.params.token)
     .digest('hex');
-
-  // Find user with valid token
   const user = await User.findOne({
     emailVerificationToken: hashedToken,
     emailVerificationExpires: { $gte: Date.now() },
@@ -151,7 +143,10 @@ exports.protect = catchAsyncError(async (req, res, next) => {
   }
   if (!currentUser.isEmailVerified) {
     return next(
-      new appError('Please verify your email address before accessing this feature!', 403)
+      new appError(
+        'Please verify your email address before accessing this feature!',
+        403
+      )
     );
   }
   req.user = currentUser;
