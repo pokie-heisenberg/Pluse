@@ -21,7 +21,10 @@ const createSendToken = (user, statusCode, req, res) => {
     ),
     httpOnly: true,
   };
-  if (process.env.NODE_ENV === 'production' && (req.secure || req.headers['x-forwarded-proto'] === 'https')) {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (req.secure || req.headers['x-forwarded-proto'] === 'https')
+  ) {
     cookieOptions.secure = true;
     cookieOptions.sameSite = 'none';
   }
@@ -162,7 +165,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
       message: 'resettoken send successfully!',
     });
   } catch (err) {
-    console.error("FORGOT PASSWORD EMAIL ERROR:", err);
+    console.error('FORGOT PASSWORD EMAIL ERROR:', err);
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
