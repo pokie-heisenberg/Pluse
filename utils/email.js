@@ -60,6 +60,8 @@ module.exports = class Email {
         html = templates.welcomeEmailTemplate(this.firstName);
       } else if (type === 'verifyEmail') {
         html = templates.emailVerificationTemplate(this.firstName, this.url);
+      } else if (type === 'otp') {
+        html = templates.otpTemplate(this.firstName, this.otp);
       } else {
         html = templates.resetPasswordTemplate(this.url);
       }
@@ -100,5 +102,9 @@ module.exports = class Email {
   }
   async sendEmailVerification() {
     await this.send('verifyEmail', 'Verify your Pluse account email');
+  }
+  async sendOTP(otp) {
+    this.otp = otp;
+    await this.send('otp', 'Your Pluse 2FA Login Code 🔐');
   }
 };

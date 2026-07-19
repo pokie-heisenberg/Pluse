@@ -5,6 +5,10 @@ const authController = require('./../controllers/authController');
 const followRouter = require('./followRoute');
 router.route('/signup').post(authController.signUp);
 router.route('/verify/:token').get(authController.verifyemail);
+router.route('/verify-otp').post(authController.verifyOTP);
+router
+  .route('/toggle-2fa')
+  .patch(authController.protect, authController.toggleTwoFactor);
 router.route('/login').post(authController.logIn);
 router.route('/forgotPassword').post(authController.forgotPassword);
 router.route('/resetPassword/:token').patch(authController.resetPassword);

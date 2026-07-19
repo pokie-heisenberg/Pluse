@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { parse } = require('path');
+const { type } = require('os');
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -69,6 +70,12 @@ const userSchema = new mongoose.Schema(
       default: true,
       select: false,
     },
+    twoFactorEnable: {
+      type: Boolean,
+      default: false,
+    },
+    twoFactorOTP: String,
+    twoFactorOTPExpires: Date,
   },
   { timestamps: true }
 );
@@ -92,6 +99,12 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
     return JWTTimestamp < changedTimeStamp;
   }
   return false;
+};
+userSchema.methods.createTwoFactorOTP = function () {
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  this.twoFactorOTP = crypto.createHash('sha256').update(otp).digest('hex');
+  this.twoFactorOTPExpires = Date.now() + 10 * 60 * 1000;
+  return otp;
 };
 userSchema.methods.createEmailVerificationToken = function () {
   const verifyToken = crypto.randomBytes(32).toString('hex');

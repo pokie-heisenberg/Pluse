@@ -127,8 +127,51 @@ const emailVerificationTemplate = (firstName, verifyUrl) => {
     </html>
   `;
 };
+const otpTemplate = (firstName, otp) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Your Login OTP</title>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .header { background: linear-gradient(135deg, #8b5cf6, #06b6d4); padding: 30px; text-align: center; color: white; }
+        .content { padding: 40px 30px; color: #333333; line-height: 1.6; }
+        .otp-box { background: linear-gradient(135deg, #f3f0ff, #e0f7ff); border: 2px dashed #8b5cf6; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0; }
+        .otp-code { font-size: 48px; font-weight: 900; letter-spacing: 12px; color: #6d28d9; font-family: monospace; }
+        .expiry { margin-top: 16px; padding: 12px; background: #fff8e1; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 13px; color: #666; }
+        .footer { background-color: #f1f1f1; padding: 20px; text-align: center; color: #777777; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>🔐 Two-Factor Authentication</h2>
+        </div>
+        <div class="content">
+          <h1>Hi ${firstName}!</h1>
+          <p>Someone (hopefully you!) is trying to log into your <strong>Pluse</strong> account. Use the code below to complete your login:</p>
+          <div class="otp-box">
+            <div class="otp-code">${otp}</div>
+          </div>
+          <div class="expiry">
+            ⏰ This code expires in <strong>10 minutes</strong>. Never share this code with anyone.
+          </div>
+          <p style="margin-top: 20px; font-size: 13px; color: #888;">If you didn't request this code, please secure your account immediately by changing your password.</p>
+        </div>
+        <div class="footer">
+          <p>&copy; ${new Date().getFullYear()} Pluse. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
 module.exports = {
   welcomeEmailTemplate,
   resetPasswordTemplate,
   emailVerificationTemplate,
+  otpTemplate,
 };

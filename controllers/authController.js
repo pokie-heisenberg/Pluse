@@ -70,14 +70,10 @@ exports.verifyemail = catchAsyncError(async (req, res, next) => {
       new appError('Verification link is invalid or has expired!', 400)
     );
   }
-
-  // Mark as verified and clear token
   user.isEmailVerified = true;
   user.emailVerificationToken = undefined;
   user.emailVerificationExpires = undefined;
   await user.save({ validateBeforeSave: false });
-
-  // Log the user in
   createSendToken(user, 200, req, res);
 });
 exports.logIn = catchAsyncError(async (req, res, next) => {
@@ -92,7 +88,40 @@ exports.logIn = catchAsyncError(async (req, res, next) => {
   if (!user || !correct) {
     return next(new appError('Incorrect Password or Email!', 401));
   }
+  if (user.twoFactorEnable) {
+    const otp = user.createTwoFactorOTP();
+    await user.save({ validateBeforeSave: false });
+    await new Email(user).sendOTP(otp);
+    return res.status(200).json({
+      status: 'otp_required',
+      message: 'OTP sent to your email',
+      userId: user._id,
+    });
+  }
   createSendToken(user, 200, req, res);
+});
+exports.verifyOTP = catchAsyncError(async (req, res, next) => {
+  const { userId, otp } = req.body;
+  const hashedOTP = crypto.createHash('sha256').update(otp).digest('hex');
+  const user = await User.findOne({
+    _id: userId,
+    twoFactorOTP: hashedOTP,
+    twoFactorOTPExpires: { $gte: Date.now() },
+  });
+  if (!user) return next(new appError('Invalid or expired OTP!', 401));
+  user.twoFactorOTP = undefined;
+  user.twoFactorOTPExpires = undefined;
+  await user.save({ validateBeforeSave: false });
+  createSendToken(user, 200, req, res);
+});
+exports.toggleTwoFactor = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  user.twoFactorEnable = !user.twoFactorEnable;
+  await user.save({ validateBeforeSave: false });
+  res.status(200).json({
+    status: 'success',
+    twoFactorEnable: user.twoFactorEnable,
+  });
 });
 exports.logout = (req, res) => {
   res.cookie('jwt', 'loggedOut', {
