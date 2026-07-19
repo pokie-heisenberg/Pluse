@@ -46,8 +46,47 @@ exports.signUp = catchAsyncError(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
     passwordChangedAt: req.body.passwordChangedAt,
   });
-  await new Email(newUser).sendWelcome();
-  createSendToken(newUser, 201, req, res);
+
+  // Generate verification token
+  const verifyToken = newUser.createEmailVerificationToken();
+  await newUser.save({ validateBeforeSave: false });
+
+  // Send verification email
+  const verifyURL = `${process.env.FRONTEND_URL}/verify-email/${verifyToken}`;
+  await new Email(newUser, verifyURL).sendVerifyEmail();
+
+  res.status(201).json({
+    status: 'success',
+    message: 'Account created! Please check your email to verify your account.',
+  });
+});
+exports.verifyemail = catchAsyncError(async (req, res, next) => {
+  // Hash the token from URL
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  // Find user with valid token
+  const user = await User.findOne({
+    emailVerificationToken: hashedToken,
+    emailVerificationExpires: { $gte: Date.now() },
+  });
+
+  if (!user) {
+    return next(
+      new appError('Verification link is invalid or has expired!', 400)
+    );
+  }
+
+  // Mark as verified and clear token
+  user.isEmailVerified = true;
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpires = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  // Log the user in
+  createSendToken(user, 200, req, res);
 });
 exports.logIn = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
@@ -102,12 +141,17 @@ exports.protect = catchAsyncError(async (req, res, next) => {
   const currentUser = await User.findById(decode.id);
   if (!currentUser) {
     return next(
-      new appError('Token belonging to user is no lomger exist!', 401)
+      new appError('Token belonging to user is no longer exist!', 401)
     );
   }
   if (currentUser.changedPasswordAfter(decode.iat)) {
     return next(
-      new appError('user reccently changed,please login again!', 401)
+      new appError('user recently changed, please login again!', 401)
+    );
+  }
+  if (!currentUser.isEmailVerified) {
+    return next(
+      new appError('Please verify your email address before accessing this feature!', 403)
     );
   }
   req.user = currentUser;

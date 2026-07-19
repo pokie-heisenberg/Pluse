@@ -58,10 +58,20 @@ const userSchema = new mongoose.Schema(
     },
     passwordResetToken: String,
     passwordResetExpires: Date,
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: String,
+    emailVerificationExpires: Date,
     active: {
       type: Boolean,
       default: true,
       select: false,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
@@ -87,6 +97,15 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   }
   return false;
 };
+userSchema.methods.createEmailVerificationToken = function () {
+  const verifyToken = crypto.randomBytes(32).toString('hex');
+  this.emailVerificationToken = crypto
+    .createHash('sha256')
+    .update(verifyToken)
+    .digest('hex');
+  this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+  return verifyToken;
+};
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto
@@ -100,12 +119,16 @@ userSchema.pre('save', function () {
   if (!this.isModified('password') || this.isNew) {
     if (this.isNew) {
       // Default to UI avatars with their name
-      if (!this.profileImage || this.profileImage === 'photo.jpg' || this.profileImage.includes('?name=User')) {
+      if (
+        !this.profileImage ||
+        this.profileImage === 'photo.jpg' ||
+        this.profileImage.includes('?name=User')
+      ) {
         this.profileImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name)}&background=random`;
       }
     }
   }
-  
+
   if (!this.isModified('password') || this.isNew) return;
   this.passwordChangedAt = Date.now() - 1000;
 });

@@ -54,49 +54,51 @@ module.exports = class Email {
   async send(type, subject) {
     try {
       let info;
+      let html;
+
       if (type === 'welcome') {
-        const html = templates.welcomeEmailTemplate(this.firstName);
-        const mailOption = {
-          from: this.from,
-          to: this.to,
-          subject,
-          html,
-          text: convert(html),
-        };
-        info = await this.newTransport().sendMail(mailOption);
+        html = templates.welcomeEmailTemplate(this.firstName);
+      } else if (type === 'verifyEmail') {
+        html = templates.emailVerificationTemplate(this.firstName, this.url);
       } else {
-        const html = templates.resetPasswordTemplate(this.url);
-        const mailOption = {
-          from: this.from,
-          to: this.to,
-          subject,
-          html,
-          text: convert(html),
-        };
-        info = await this.newTransport().sendMail(mailOption);
+        html = templates.resetPasswordTemplate(this.url);
       }
 
-      // If using Ethereal, log the preview URL so the developer can see the email!
+      const mailOption = {
+        from: this.from,
+        to: this.to,
+        subject,
+        html,
+        text: convert(html),
+      };
+
+      info = await this.newTransport().sendMail(mailOption);
+
       if (info && info.messageId && nodemailer.getTestMessageUrl(info)) {
         console.log(
           '✉️ Email sent! Preview URL: %s',
           nodemailer.getTestMessageUrl(info)
         );
       } else {
-        console.log('✉️ Email (Fallback): Reset URL is', this.url);
+        console.log('✉️ Email sent to:', this.to);
       }
     } catch (err) {
       console.error('Failed to send email:', err.message);
-      // We don't throw here to avoid crashing the whole signup process!
     }
   }
   async sendWelcome() {
     await this.send('welcome', 'Welcome to Pluse Family');
+  }
+  async sendVerifyEmail() {
+    await this.send('verifyEmail', 'Verify your Pluse account email ✉️');
   }
   async sendResetPassword() {
     await this.send(
       'passwordReset',
       'Your password reset token is valid only for 10 min'
     );
+  }
+  async sendEmailVerification() {
+    await this.send('verifyEmail', 'Verify your Pluse account email');
   }
 };

@@ -81,7 +81,54 @@ const resetPasswordTemplate = (resetUrl) => {
   `;
 };
 
+const emailVerificationTemplate = (firstName, verifyUrl) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Verify Your Email</title>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .header { background: linear-gradient(135deg, #06b6d4, #8b5cf6); padding: 30px; text-align: center; color: white; }
+        .content { padding: 40px 30px; color: #333333; line-height: 1.6; }
+        .content h1 { margin-top: 0; color: #333333; font-size: 24px; }
+        .btn { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #06b6d4, #8b5cf6); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px; font-size: 16px; }
+        .expiry { margin-top: 24px; padding: 12px; background: #fff8e1; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 13px; color: #666; }
+        .footer { background-color: #f1f1f1; padding: 20px; text-align: center; color: #777777; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>✉️ Verify Your Email</h2>
+        </div>
+        <div class="content">
+          <h1>Hi ${firstName}!</h1>
+          <p>Thanks for signing up for <strong>Pluse</strong>. You're almost ready to start connecting with people!</p>
+          <p>Please verify your email address by clicking the button below:</p>
+          <div style="text-align: center;">
+            <a href="${verifyUrl}" class="btn" style="color: white;">Verify My Email</a>
+          </div>
+          <div class="expiry">
+            ⏰ This link will expire in <strong>24 hours</strong>. If you didn't create an account, you can safely ignore this email.
+          </div>
+          <p style="margin-top: 20px; font-size: 13px; color: #555;">
+            Or copy and paste this link into your browser:<br>
+            <a href="${verifyUrl}" style="color: #06b6d4; word-break: break-all;">${verifyUrl}</a>
+          </p>
+        </div>
+        <div class="footer">
+          <p>&copy; ${new Date().getFullYear()} Pluse. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
 module.exports = {
   welcomeEmailTemplate,
   resetPasswordTemplate,
+  emailVerificationTemplate,
 };
