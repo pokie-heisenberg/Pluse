@@ -155,7 +155,7 @@ exports.forgotPassword = catchAsyncError(async (req, res, next) => {
     //   message,
     //   html: resetPasswordTemplate(resetUrl),
     // });
-    const resetURL = `http://localhost:5173/reset-password/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
     await new Email(user, resetURL).sendResetPassword();
     res.status(200).json({
       status: 'Success',
