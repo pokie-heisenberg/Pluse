@@ -121,3 +121,51 @@ exports.getUser = catchAsyncError(async (req, res, next) => {
 });
 exports.deleteUser = factoryFunction.deleteOne(User);
 exports.updateUser = factoryFunction.updateOne(User);
+
+exports.getFollowers = catchAsyncError(async (req, res, next) => {
+  const userId = req.params.id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skip = (page - 1) * limit;
+
+  const followers = await Follow.find({ following: userId })
+    .populate('follower', 'name profileImage email')
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const total = await Follow.countDocuments({ following: userId });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      users: followers.map((f) => f.follower),
+      total,
+      page,
+    },
+  });
+});
+
+exports.getFollowing = catchAsyncError(async (req, res, next) => {
+  const userId = req.params.id;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skip = (page - 1) * limit;
+
+  const following = await Follow.find({ follower: userId })
+    .populate('following', 'name profileImage email')
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const total = await Follow.countDocuments({ follower: userId });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      users: following.map((f) => f.following),
+      total,
+      page,
+    },
+  });
+});

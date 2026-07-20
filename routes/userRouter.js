@@ -23,6 +23,8 @@ router.get(
 router
   .route('/:id')
   .get(authController.optionalProtect, userController.getUser);
+router.route('/:id/followers').get(userController.getFollowers);
+router.route('/:id/following').get(userController.getFollowing);
 
 router.use(authController.protect);
 router.patch('/updatePassword', authController.updatePassword);
