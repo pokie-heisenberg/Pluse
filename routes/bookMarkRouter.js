@@ -5,6 +5,7 @@ const bookMarkController = require('./../controllers/bookMarkController');
 router.use(authController.protect);
 router
   .route('/')
+  .get(bookMarkController.getBookMarkPosts)
   .post(authController.restrictedTo('user'), bookMarkController.bookMarkPost)
   .delete(bookMarkController.UnMarkPost);
 module.exports = router;

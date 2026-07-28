@@ -16,12 +16,14 @@ const commentRouter = require('./routes/commentsRouter');
 const postRouter = require('./routes/postRouter');
 const userRouter = require('./routes/userRouter');
 const notificationRouter = require('./routes/notificationRouter');
+const bookMarkRouter = require('./routes/bookMarkRouter');
 const morgan = require('morgan');
 app.use(express.json());
 app.use('/api/v1/posts', postRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/notifications', notificationRouter);
 app.use('/api/v1/comments', commentRouter);
+app.use('/api/v1/bookmarks', bookMarkRouter);
 app.use(globalErrorHandler);
 
 module.exports = app;
