@@ -4,17 +4,13 @@ const BookMark = require('./../models/bookMarkModels');
 exports.getBookMarkPosts = catchAsyncError(async (req, res, next) => {
   const bookMarks = await BookMark.find({ user: req.user.id }).populate({
     path: 'post',
-    populate: {
-      path: 'author',
-      select: 'name profileImage',
-    },
+    populate: { path: 'author', select: 'name profileImage _id', model: 'User' },
   });
+
   res.status(200).json({
     status: 'success',
     result: bookMarks.length,
-    data: {
-      bookMarks,
-    },
+    data: { bookMarks },
   });
 });
 exports.bookMarkPost = catchAsyncError(async (req, res, next) => {

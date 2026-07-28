@@ -4,6 +4,7 @@ const Post = require('./../models/postModels');
 const cloudinary = require('./../utils/cloudinary');
 const Follow = require('./../models/followModels');
 const Like = require('./../models/likeModels');
+const BookMark = require('./../models/bookMarkModels');
 const factoryFunction = require('./factoryFunction');
 
 const streamUpload = (file) => {
@@ -42,14 +43,17 @@ exports.getAllPosts = catchAsyncError(async (req, res, next) => {
 
   let posts = doc.map((post) => (post.toObject ? post.toObject() : post));
   if (req.user) {
-    const userLikes = await Like.find({
-      user: req.user.id,
-      post: { $in: posts.map((p) => p._id) },
-    });
+    const postIds = posts.map((p) => p._id);
+    const [userLikes, userBookmarks] = await Promise.all([
+      Like.find({ user: req.user.id, post: { $in: postIds } }),
+      BookMark.find({ user: req.user.id, post: { $in: postIds } }),
+    ]);
     const likedPostIds = userLikes.map((l) => l.post.toString());
+    const bookmarkedPostIds = userBookmarks.map((b) => b.post.toString());
     posts = posts.map((post) => ({
       ...post,
       isLiked: likedPostIds.includes(post._id.toString()),
+      isBookmarked: bookmarkedPostIds.includes(post._id.toString()),
     }));
   }
 
@@ -123,14 +127,17 @@ exports.getUserFeed = catchAsyncError(async (req, res, next) => {
   const feedPost = await feedQuery.skip(skip).limit(limit);
 
   let posts = feedPost.map((post) => (post.toObject ? post.toObject() : post));
-  const userLikes = await Like.find({
-    user: req.user.id,
-    post: { $in: posts.map((p) => p._id) },
-  });
+  const postIds = posts.map((p) => p._id);
+  const [userLikes, userBookmarks] = await Promise.all([
+    Like.find({ user: req.user.id, post: { $in: postIds } }),
+    BookMark.find({ user: req.user.id, post: { $in: postIds } }),
+  ]);
   const likedPostIds = userLikes.map((l) => l.post.toString());
+  const bookmarkedPostIds = userBookmarks.map((b) => b.post.toString());
   posts = posts.map((post) => ({
     ...post,
     isLiked: likedPostIds.includes(post._id.toString()),
+    isBookmarked: bookmarkedPostIds.includes(post._id.toString()),
   }));
 
   res.status(201).json({
@@ -154,14 +161,17 @@ exports.getUserPosts = catchAsyncError(async (req, res, next) => {
 
   let posts = doc.map((post) => (post.toObject ? post.toObject() : post));
   if (req.user) {
-    const userLikes = await Like.find({
-      user: req.user.id,
-      post: { $in: posts.map((p) => p._id) },
-    });
+    const postIds = posts.map((p) => p._id);
+    const [userLikes, userBookmarks] = await Promise.all([
+      Like.find({ user: req.user.id, post: { $in: postIds } }),
+      BookMark.find({ user: req.user.id, post: { $in: postIds } }),
+    ]);
     const likedPostIds = userLikes.map((l) => l.post.toString());
+    const bookmarkedPostIds = userBookmarks.map((b) => b.post.toString());
     posts = posts.map((post) => ({
       ...post,
       isLiked: likedPostIds.includes(post._id.toString()),
+      isBookmarked: bookmarkedPostIds.includes(post._id.toString()),
     }));
   }
 
