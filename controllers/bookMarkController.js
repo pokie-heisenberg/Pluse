@@ -2,7 +2,9 @@ const catchAsyncError = require('./../utils/catchAsyncError');
 const appError = require('./../utils/appError');
 const BookMark = require('./../models/bookMarkModels');
 exports.getBookMarkPosts = catchAsyncError(async (req, res, next) => {
-  const bookMarks = await BookMark.find({ user: req.user.id }).populate('post');
+  const bookMarks = await BookMark.find({ user: req.user.id })
+    .populate('post')
+    .populate('user');
   res.status(200).json({
     status: 'success',
     result: bookMarks.length,
