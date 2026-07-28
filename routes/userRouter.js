@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require('./../controllers/userController');
 const authController = require('./../controllers/authController');
 const followRouter = require('./followRoute');
+const bookMarkController = require('./../controllers/bookMarkController');
 router.route('/signup').post(authController.signUp);
 router.route('/verify/:token').get(authController.verifyemail);
 router.route('/verify-otp').post(authController.verifyOTP);
@@ -21,11 +22,13 @@ router.get(
   userController.getUser
 );
 router
+  .route('/bookmark')
+  .get(authController.protect, bookMarkController.getBookMarkPosts);
+router
   .route('/:id')
   .get(authController.optionalProtect, userController.getUser);
 router.route('/:id/followers').get(userController.getFollowers);
 router.route('/:id/following').get(userController.getFollowing);
-
 router.use(authController.protect);
 router.patch('/updatePassword', authController.updatePassword);
 router.use('/follow', followRouter);

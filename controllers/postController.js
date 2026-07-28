@@ -63,7 +63,6 @@ exports.getAllPosts = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getPost = factoryFunction.getOne(Post);
-
 exports.updatePost = catchAsyncError(async (req, res, next) => {
   // If the frontend sends existing media URLs that were retained, parse them.
   // FormData sends arrays strangely, so ensure we handle it.
