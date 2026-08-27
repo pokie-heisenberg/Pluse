@@ -56,6 +56,9 @@ exports.acceptFollowRequest = catchAsyncError(async (req, res, next) => {
   });
 
   // Increment follower and following counts for both users
+  await User.findByIdAndUpdate(req.params.userId, { $inc: { following: 1 } });
+  await User.findByIdAndUpdate(req.user.id, { $inc: { follower: 1 } });
+
   await FollowRequest.deleteOne({
     sender: req.params.userId,
     receiver: req.user.id,
