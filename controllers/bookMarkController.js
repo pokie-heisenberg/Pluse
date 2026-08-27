@@ -7,10 +7,13 @@ exports.getBookMarkPosts = catchAsyncError(async (req, res, next) => {
     populate: { path: 'author', select: 'name profileImage _id', model: 'User' },
   });
 
+  // Filter out bookmarks where the post has been deleted
+  const validBookMarks = bookMarks.filter((bm) => bm.post !== null);
+
   res.status(200).json({
     status: 'success',
-    result: bookMarks.length,
-    data: { bookMarks },
+    result: validBookMarks.length,
+    data: { bookMarks: validBookMarks },
   });
 });
 exports.bookMarkPost = catchAsyncError(async (req, res, next) => {
